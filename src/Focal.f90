@@ -147,7 +147,9 @@ module Focal
   type :: fclProgram
     !! Type wrapper for openCL program objects
     private
-    integer(c_intptr_t) :: cl_program                !! openCL program pointer
+    integer(c_intptr_t) :: cl_program = -1                !! openCL program pointer
+    contains
+    final :: fclReleaseProgram
   end type fclProgram
 
  type :: fclKernelPointer
@@ -178,7 +180,7 @@ module Focal
     integer :: nBuffers = 0
       !! Number of buffers in buffers array
     contains
-      procedure, pass :: add => fclProfilerAdd
+      procedure, pass :: add => fclProfilerAdd_1
   end type fclProfiler
 
    type :: fclProfileContainer
@@ -202,7 +204,7 @@ module Focal
 
   type, extends(fclProfileContainer) :: fclKernel
     !! Type wrapper for openCL kernel objects
-    integer(c_intptr_t), private :: cl_kernel        !! openCL kernel pointer
+    integer(c_intptr_t), private :: cl_kernel = -1        !! openCL kernel pointer
     character(:), allocatable :: name                !! Kernel name
     integer(c_int32_t) :: work_dim = 1               !! Number of work-range dimensions
     integer(c_size_t) :: global_work_offset(3) = 0   !! Global work dimension offsets
@@ -218,6 +220,7 @@ module Focal
     generic :: launchAfter => launchKernelAfterEvent_1, launchKernelAfterEvent_2, &
            launchKernelAfterEventList_1, launchKernelAfterEventList_2
       !! Launch a kernel with event dependencies
+    final :: fclReleaseKernel
   end type fclKernel
 
   type, extends(fclProfileContainer) :: fclDeviceBuffer
@@ -281,6 +284,9 @@ module Focal
 
   type(fclContext), target :: fclDefaultCtx
     !! Default context: used when context is omittetd in focal api calls
+
+  type(fclProfiler) :: fclDefaultProfiler
+    !! Default profiler: used when profile is omitted in focal api calls
 
   type(fclEvent), target :: fclLastWriteEvent
     !! Focal event object for the most recent write event (host-to-device) to be enqueued
@@ -1261,6 +1267,11 @@ module Focal
       type(fclKernel) :: kern                                !! Returns fclKernel object for execution
     end function fclGetProgramKernel
 
+    module subroutine fclReleaseProgram(prog)
+      !! Release underlying memory associated with OpenCL program pointer
+      type(fclProgram), intent(in) :: prog                   !! Compiled program object containing kernel
+    end subroutine fclReleaseProgram
+
   end interface
 
   interface fclLaunchKernelAfter
@@ -1296,19 +1307,52 @@ module Focal
 
   interface
     module subroutine fclLaunchKernel(kernel,a0,a1,a2,a3,a4,a5,a6,a7,a8,a9, &
-                                        a10,a11,a12,a13,a14,a15,a16,a17,a18,a19)
+                                        a10,a11,a12,a13,a14,a15,a16,a17,a18,a19, &
+                                        a20,a21,a22,a23,a24,a25,a26,a27,a28,a29, &
+                                        a30,a31,a32,a33,a34,a35,a36,a37,a38,a39, &
+                                        a40,a41,a42,a43,a44,a45,a46,a47,a48,a49, &
+                                        a50,a51,a52,a53,a54,a55,a56,a57,a58,a59, &
+                                        a60,a61,a62,a63,a64,a65,a66,a67,a68,a69, &
+                                        a70,a71,a72,a73,a74,a75,a76,a77,a78,a79, &
+                                        a80,a81,a82,a83,a84,a85,a86,a87,a88,a89, &
+                                        a90,a91,a92,a93,a94,a95,a96,a97,a98,a99, &
+                                        a100,a101,a102,a103,a104,a105,a106,a107,a108,a109, &
+                                        a110,a111,a112,a113,a114,a115,a116,a117,a118,a119, &
+                                        a120,a121,a122,a123,a124,a125,a126,a127,a128,a129)
       !! Enqueue a kernel with command arguments
       class(fclKernel), intent(inout), target :: kernel   !! Focal kernel object
       class(*), intent(in), optional, target :: a0
         !! Focal command queue or first kernel argument
       class(*), intent(in), optional, target :: a1,a2,a3,a4,a5,a6,a7,a8,a9, &
-                                               a10,a11,a12,a13,a14,a15,a16,a17,a18,a19
+                                               a10,a11,a12,a13,a14,a15,a16,a17,a18,a19, &
+                                               a20,a21,a22,a23,a24,a25,a26,a27,a28,a29, &
+                                               a30,a31,a32,a33,a34,a35,a36,a37,a38,a39, &
+                                               a40,a41,a42,a43,a44,a45,a46,a47,a48,a49, &
+                                               a50,a51,a52,a53,a54,a55,a56,a57,a58,a59, &
+                                               a60,a61,a62,a63,a64,a65,a66,a67,a68,a69, &
+                                               a70,a71,a72,a73,a74,a75,a76,a77,a78,a79, &
+                                               a80,a81,a82,a83,a84,a85,a86,a87,a88,a89, &
+                                               a90,a91,a92,a93,a94,a95,a96,a97,a98,a99, &
+                                               a100,a101,a102,a103,a104,a105,a106,a107,a108,a109, &
+                                               a110,a111,a112,a113,a114,a115,a116,a117,a118,a119, &
+                                               a120,a121,a122,a123,a124,a125,a126,a127,a128,a129
         !! Subsequent kernel arguments.
         !! Can be a scalar, an fclDeviceBuffer object, or an fclLocalArgument
     end subroutine fclLaunchKernel
 
     module subroutine fclProcessKernelArgs(kernel,cmdq,narg,a0,a1,a2,a3,a4,a5,a6,a7,a8,a9, &
-                                              a10,a11,a12,a13,a14,a15,a16,a17,a18,a19)
+                                              a10,a11,a12,a13,a14,a15,a16,a17,a18,a19, &
+                                              a20,a21,a22,a23,a24,a25,a26,a27,a28,a29, &
+                                              a30,a31,a32,a33,a34,a35,a36,a37,a38,a39, &
+                                              a40,a41,a42,a43,a44,a45,a46,a47,a48,a49, &
+                                              a50,a51,a52,a53,a54,a55,a56,a57,a58,a59, &
+                                              a60,a61,a62,a63,a64,a65,a66,a67,a68,a69, &
+                                              a70,a71,a72,a73,a74,a75,a76,a77,a78,a79, &
+                                              a80,a81,a82,a83,a84,a85,a86,a87,a88,a89, &
+                                              a90,a91,a92,a93,a94,a95,a96,a97,a98,a99, &
+                                              a100,a101,a102,a103,a104,a105,a106,a107,a108,a109, &
+                                              a110,a111,a112,a113,a114,a115,a116,a117,a118,a119, &
+                                              a120,a121,a122,a123,a124,a125,a126,a127,a128,a129)
       !! Sets kernel arguments and parses argument list for optional cmdq and actual number of arguments.
       !! @note This is helper routine used internally by focal.  If you just want set kernel arguments
       !!  without launching a kernel, use `fclSetKernelArgs`. @endnote
@@ -1320,17 +1364,50 @@ module Focal
       class(*), intent(in), optional, target :: a0
         !! Focal command queue or first kernel argument
       class(*), intent(in), optional, target :: a1,a2,a3,a4,a5,a6,a7,a8,a9, &
-                                               a10,a11,a12,a13,a14,a15,a16,a17,a18,a19
+                                               a10,a11,a12,a13,a14,a15,a16,a17,a18,a19, &
+                                               a20,a21,a22,a23,a24,a25,a26,a27,a28,a29, &
+                                               a30,a31,a32,a33,a34,a35,a36,a37,a38,a39, &
+                                               a40,a41,a42,a43,a44,a45,a46,a47,a48,a49, &
+                                               a50,a51,a52,a53,a54,a55,a56,a57,a58,a59, &
+                                               a60,a61,a62,a63,a64,a65,a66,a67,a68,a69, &
+                                               a70,a71,a72,a73,a74,a75,a76,a77,a78,a79, &
+                                               a80,a81,a82,a83,a84,a85,a86,a87,a88,a89, &
+                                               a90,a91,a92,a93,a94,a95,a96,a97,a98,a99, &
+                                               a100,a101,a102,a103,a104,a105,a106,a107,a108,a109, &
+                                               a110,a111,a112,a113,a114,a115,a116,a117,a118,a119, &
+                                               a120,a121,a122,a123,a124,a125,a126,a127,a128,a129
         !! Subsequent kernel arguments.
         !! Can be a scalar, an fclDeviceBuffer object, or an fclLocalArgument
     end subroutine fclProcessKernelArgs
 
     module subroutine fclSetKernelArgs(kernel,a0,a1,a2,a3,a4,a5,a6,a7,a8,a9, &
-                                         a10,a11,a12,a13,a14,a15,a16,a17,a18,a19)
+                                         a10,a11,a12,a13,a14,a15,a16,a17,a18,a19, &
+                                         a20,a21,a22,a23,a24,a25,a26,a27,a28,a29, &
+                                         a30,a31,a32,a33,a34,a35,a36,a37,a38,a39, &
+                                         a40,a41,a42,a43,a44,a45,a46,a47,a48,a49, &
+                                         a50,a51,a52,a53,a54,a55,a56,a57,a58,a59, &
+                                         a60,a61,a62,a63,a64,a65,a66,a67,a68,a69, &
+                                         a70,a71,a72,a73,a74,a75,a76,a77,a78,a79, &
+                                         a80,a81,a82,a83,a84,a85,a86,a87,a88,a89, &
+                                         a90,a91,a92,a93,a94,a95,a96,a97,a98,a99, &
+                                         a100,a101,a102,a103,a104,a105,a106,a107,a108,a109, &
+                                         a110,a111,a112,a113,a114,a115,a116,a117,a118,a119, &
+                                         a120,a121,a122,a123,a124,a125,a126,a127,a128,a129)
       !! Set all kernel arguments at once without launching kernel.
       class(fclKernel), intent(in), target :: kernel    !! Focal kernel object
       class(*), intent(in), optional, target :: a0,a1,a2,a3,a4,a5,a6,a7,a8,a9, &
-                                               a10,a11,a12,a13,a14,a15,a16,a17,a18,a19
+                                               a10,a11,a12,a13,a14,a15,a16,a17,a18,a19, &
+                                               a20,a21,a22,a23,a24,a25,a26,a27,a28,a29, &
+                                               a30,a31,a32,a33,a34,a35,a36,a37,a38,a39, &
+                                               a40,a41,a42,a43,a44,a45,a46,a47,a48,a49, &
+                                               a50,a51,a52,a53,a54,a55,a56,a57,a58,a59, &
+                                               a60,a61,a62,a63,a64,a65,a66,a67,a68,a69, &
+                                               a70,a71,a72,a73,a74,a75,a76,a77,a78,a79, &
+                                               a80,a81,a82,a83,a84,a85,a86,a87,a88,a89, &
+                                               a90,a91,a92,a93,a94,a95,a96,a97,a98,a99, &
+                                               a100,a101,a102,a103,a104,a105,a106,a107,a108,a109, &
+                                               a110,a111,a112,a113,a114,a115,a116,a117,a118,a119, &
+                                               a120,a121,a122,a123,a124,a125,a126,a127,a128,a129
         !! Kernel arguments.
         !! Can be a scalar, an fclDeviceBuffer object, or an fclLocalArgument
     end subroutine fclSetKernelArgs
@@ -1361,6 +1438,11 @@ module Focal
       integer, intent(in) :: nElem                   !! No of array elements
       type(fclLocalArgDouble) :: localArg            !! Returns local argument object
     end function fclLocalDouble
+
+    module subroutine fclReleaseKernel(kernel)
+      !! Release OpenCL memory associated with underlying kernel pointer
+      type(fclKernel), intent(inout) :: kernel          !! Focal kernel object
+    end subroutine fclReleaseKernel
 
   end interface
 
@@ -1524,9 +1606,9 @@ module Focal
 
   ! ------------------------- PROFILING  ROUTINES -----------------------------
 
-  interface
+  interface fclProfilerAdd
 
-    module subroutine fclProfilerAdd(profiler,profileSize,c0,c1,c2,c3,c4,c5,c6,c7,c8,c9)
+    module subroutine fclProfilerAdd_1(profiler,profileSize,c0,c1,c2,c3,c4,c5,c6,c7,c8,c9)
       !! Enable profiling for multiple container (kernel/buffer) and add to profiler collection
       class(fclProfiler), intent(inout) :: profiler
         !! Profiler - collection of objects to profile
@@ -1536,7 +1618,21 @@ module Focal
         !! Object (kernel/buffer) for which to enable profiling
       class(fclProfileContainer), intent(inout), target, optional :: c1, c2, c3,c4,c5,c6,c7,c8,c9
         !! Subsequent objects (kernel/buffer) for which to enable profiling
-    end subroutine fclProfilerAdd
+    end subroutine fclProfilerAdd_1
+
+    module subroutine fclProfilerAdd_2(profileSize,c0,c1,c2,c3,c4,c5,c6,c7,c8,c9)
+      !! Enable profiling for multiple container (kernel/buffer) and add to the default profiler
+      integer, intent(in) :: profileSize
+        !! Number of events to save for profiling (allocation size)
+      class(fclProfileContainer), intent(inout), target :: c0
+        !! Object (kernel/buffer) for which to enable profiling
+      class(fclProfileContainer), intent(inout), target, optional :: c1, c2, c3,c4,c5,c6,c7,c8,c9
+        !! Subsequent objects (kernel/buffer) for which to enable profiling
+    end subroutine fclProfilerAdd_2
+
+  end interface fclProfilerAdd
+
+  interface
 
     module subroutine fclEnableProfiling(container,profileSize,profiler)
       !! Enable profiling on a specific container by allocating space to save events
@@ -1563,14 +1659,28 @@ module Focal
       type(fclEvent), intent(in) :: eventList(:)
       integer(c_int64_t) :: durations(size(eventList,1))
     end function fclGetEventDurations
-    
-    module subroutine fclDumpProfileData(profiler,outputUnit)
+
+  end interface
+
+  interface fclDumpProfileData
+
+    module subroutine fclDumpProfileData_1(profiler,outputUnit)
       !! Dump summary of profiler data for list of kernels to specific output unit
       class(fclProfiler), intent(in) :: profiler
         !! Profiler object containing collection of kernels & buffers to profile
       integer, intent(in), optional :: outputUnit
         !! Output unit to write summary data
-    end subroutine fclDumpProfileData
+    end subroutine fclDumpProfileData_1
+
+    module subroutine fclDumpProfileData_2(outputUnit)
+      !! Dump summary of default profiler data for list of kernels to specific output unit
+      integer, intent(in), optional :: outputUnit
+        !! Output unit to write summary data
+    end subroutine fclDumpProfileData_2
+
+  end interface fclDumpProfileData
+
+  interface
 
     module subroutine fclDumpKernelProfileData(outputUnit,kernelList,device)
       !! Dump summary of profile data for list of kernels to specific output unit
@@ -1597,15 +1707,25 @@ module Focal
         !! List of buffers for which to dump profile data
     end subroutine fclDumpBufferProfileData
 
-    module subroutine fclDumpTracingData(profiler, filename)
+  end interface
+
+  interface fclDumpTracingData
+
+    module subroutine fclDumpTracingData_1(profiler, filename)
       !! Writes a chrome://tracing data format for profiled events
       class(fclProfiler), intent(in) :: profiler
         !! Profiler collection object containing kernels/buffers that have been profiled
       character(*), intent(in) :: filename
         !! Filename to which to write chrome://tracing format
-    end subroutine fclDumpTracingData
+    end subroutine fclDumpTracingData_1
 
-  end interface
+    module subroutine fclDumpTracingData_2(filename)
+      !! Writes a chrome://tracing data format for the default profiler
+      character(*), intent(in) :: filename
+        !! Filename to which to write chrome://tracing format
+    end subroutine fclDumpTracingData_2
+
+  end interface fclDumpTracingData
 
 
   ! ---------------------------- DEBUG ROUTINES -------------------------------
@@ -1726,6 +1846,30 @@ module Focal
       character(len=len(linei)) strStripNum
         !! Converted string output
     end function strStripNum
+
+    elemental pure module function upperStr(str) result (string)
+      !! Convert string to uppercase (for case-insensitive comparison)
+      character(*), intent(in)      :: str
+      character(len(str))           :: string
+    end function upperStr
+
+    module subroutine splitStr(input_line,array,delimiters,order,nulls)
+      !! parse string into an array using specified delimiters
+      !! AUTHOR:  John S. Urban       LICENSE: Public Domain
+      character(len=*),intent(in)              :: input_line  ! input string to tokenize
+      character(len=*),optional,intent(in)     :: delimiters  ! list of delimiter characters
+      character(len=*),optional,intent(in)     :: order       ! order of output array sequential|[reverse|right]
+      character(len=*),optional,intent(in)     :: nulls       ! return strings composed of delimiters or not ignore|return|ignoreend
+      character(len=:),allocatable,intent(out) :: array(:)    ! output array of tokens
+    end subroutine splitStr
+
+    elemental module function str_noesc(INSTR)
+      !! convert non-printable characters to a space.
+      !! AUTHOR:  John S. Urban       LICENSE: Public Domain
+      character(len=*),intent(in) :: INSTR
+        !! string that might contain nonprintable characters
+      character(len=len(instr))   :: str_noesc
+    end function str_noesc
 
   end interface
 

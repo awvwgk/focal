@@ -35,7 +35,6 @@ submodule (Focal) Focal_Setup
   !!  corresponding header module file. See header module file (Focal.f90) for interface definitions. @endnote
 
   use clfortran
-  use M_strings, only: upperStr=>upper, splitStr=>split
   implicit none
 
   contains
@@ -314,6 +313,9 @@ submodule (Focal) Focal_Setup
 
     ! Create context and set as default
     call fclSetDefaultContext(fclCreateContext(chosenPlatform))
+
+    ! Add device to the default profiler
+    fclDefaultProfiler%device = device
 
   end procedure fclInit
   ! ---------------------------------------------------------------------------
@@ -624,6 +626,20 @@ submodule (Focal) Focal_Setup
   ! ---------------------------------------------------------------------------
 
 
+  module procedure fclReleaseProgram !(prog)
+    !! Release underlying memory associated with OpenCL program pointer
+
+    integer :: errcode
+
+    if (prog%cl_program /= -1) then
+      errcode = clReleaseProgram(prog%cl_program)
+      call fclHandleError(errcode,'fclReleaseProgram','clReleaseProgram')
+    end if
+
+  end procedure fclReleaseProgram
+  ! ---------------------------------------------------------------------------
+
+
   module procedure fclLaunchKernelAfterEvent_1 !(kernel,cmdQ,event)
     !! Specific interface for a single event dependency on a specific command queue
 
@@ -663,7 +679,18 @@ submodule (Focal) Focal_Setup
 
 
   module procedure fclLaunchKernel !(kernel,a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,&
-                                      ! a10,a11,a12,a13,a14,a15,a16,a17,a18,a19)
+                                      ! a10,a11,a12,a13,a14,a15,a16,a17,a18,a19, &
+                                      !  a20,a21,a22,a23,a24,a25,a26,a27,a28,a29, &
+                                      !  a30,a31,a32,a33,a34,a35,a36,a37,a38,a39, &
+                                      !  a40,a41,a42,a43,a44,a45,a46,a47,a48,a49, &
+                                      !  a50,a51,a52,a53,a54,a55,a56,a57,a58,a59, &
+                                      !  a60,a61,a62,a63,a64,a65,a66,a67,a68,a69, &
+                                      !  a70,a71,a72,a73,a74,a75,a76,a77,a78,a79, &
+                                      !  a80,a81,a82,a83,a84,a85,a86,a87,a88,a89, &
+                                      !  a90,a91,a92,a93,a94,a95,a96,a97,a98,a99, &
+                                      !  a100,a101,a102,a103,a104,a105,a106,a107,a108,a109, &
+                                      !  a110,a111,a112,a113,a114,a115,a116,a117,a118,a119, &
+                                      !  a120,a121,a122,a123,a124,a125,a126,a127,a128,a129)
 
     integer(c_size_t) :: i, nBlocki
     integer(c_int32_t) :: errcode
@@ -697,7 +724,18 @@ submodule (Focal) Focal_Setup
 
     ! Set arguments and parse (get number of args and cmdq if specified)
     call fclProcessKernelArgs(kernel,cmdq,narg,a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,&
-                                a10,a11,a12,a13,a14,a15,a16,a17,a18,a19)
+                                a10,a11,a12,a13,a14,a15,a16,a17,a18,a19, &
+                                a20,a21,a22,a23,a24,a25,a26,a27,a28,a29, &
+                                a30,a31,a32,a33,a34,a35,a36,a37,a38,a39, &
+                                a40,a41,a42,a43,a44,a45,a46,a47,a48,a49, &
+                                a50,a51,a52,a53,a54,a55,a56,a57,a58,a59, &
+                                a60,a61,a62,a63,a64,a65,a66,a67,a68,a69, &
+                                a70,a71,a72,a73,a74,a75,a76,a77,a78,a79, &
+                                a80,a81,a82,a83,a84,a85,a86,a87,a88,a89, &
+                                a90,a91,a92,a93,a94,a95,a96,a97,a98,a99, &
+                                a100,a101,a102,a103,a104,a105,a106,a107,a108,a109, &
+                                a110,a111,a112,a113,a114,a115,a116,a117,a118,a119, &
+                                a120,a121,a122,a123,a124,a125,a126,a127,a128,a129)
 
     errcode = clEnqueueNDRangeKernel(cmdq%cl_command_queue, &
                 kernel%cl_kernel, kernel%work_dim, &
@@ -720,7 +758,18 @@ submodule (Focal) Focal_Setup
 
 
   module procedure fclProcessKernelArgs !(kernel,cmdq,narg,a0,a1,a2,a3,a4,a5,a6,a7,a8,a9, &
-                                            ! a10,a11,a12,a13,a14,a15,a16,a17,a18,a19)
+                                            ! a10,a11,a12,a13,a14,a15,a16,a17,a18,a19, &
+                                            ! a20,a21,a22,a23,a24,a25,a26,a27,a28,a29, &
+                                            ! a30,a31,a32,a33,a34,a35,a36,a37,a38,a39, &
+                                            ! a40,a41,a42,a43,a44,a45,a46,a47,a48,a49, &
+                                            ! a50,a51,a52,a53,a54,a55,a56,a57,a58,a59, &
+                                            ! a60,a61,a62,a63,a64,a65,a66,a67,a68,a69, &
+                                            ! a70,a71,a72,a73,a74,a75,a76,a77,a78,a79, &
+                                            ! a80,a81,a82,a83,a84,a85,a86,a87,a88,a89, &
+                                            ! a90,a91,a92,a93,a94,a95,a96,a97,a98,a99, &
+                                            ! a100,a101,a102,a103,a104,a105,a106,a107,a108,a109, &
+                                            ! a110,a111,a112,a113,a114,a115,a116,a117,a118,a119, &
+                                            ! a120,a121,a122,a123,a124,a125,a126,a127,a128,a129)
     !! Sets kernel arguments and parses argument list for optional cmdq and actual number of arguments
 
     integer :: i0
@@ -823,6 +872,447 @@ submodule (Focal) Focal_Setup
       call fclSetKernelArg(kernel,i0+18,a19)
       nArg = nArg + 1
     end if
+    if (present(a20)) then
+      call fclSetKernelArg(kernel,i0+19,a20)
+      nArg = nArg + 1
+    end if
+    if (present(a21)) then
+      call fclSetKernelArg(kernel,i0+20,a21)
+      nArg = nArg + 1
+    end if
+    if (present(a22)) then
+      call fclSetKernelArg(kernel,i0+21,a22)
+      nArg = nArg + 1
+    end if
+    if (present(a23)) then
+      call fclSetKernelArg(kernel,i0+22,a23)
+      nArg = nArg + 1
+    end if
+    if (present(a24)) then
+      call fclSetKernelArg(kernel,i0+23,a24)
+      nArg = nArg + 1
+    end if
+    if (present(a25)) then
+      call fclSetKernelArg(kernel,i0+24,a25)
+      nArg = nArg + 1
+    end if
+    if (present(a26)) then
+      call fclSetKernelArg(kernel,i0+25,a26)
+      nArg = nArg + 1
+    end if
+    if (present(a27)) then
+      call fclSetKernelArg(kernel,i0+26,a27)
+      nArg = nArg + 1
+    end if
+    if (present(a28)) then
+      call fclSetKernelArg(kernel,i0+27,a28)
+      nArg = nArg + 1
+    end if
+    if (present(a29)) then
+      call fclSetKernelArg(kernel,i0+28,a29)
+      nArg = nArg + 1
+    end if
+    if (present(a30)) then
+      call fclSetKernelArg(kernel,i0+29,a30)
+      nArg = nArg + 1
+    end if
+    if (present(a31)) then
+      call fclSetKernelArg(kernel,i0+30,a31)
+      nArg = nArg + 1
+    end if
+    if (present(a32)) then
+      call fclSetKernelArg(kernel,i0+31,a32)
+      nArg = nArg + 1
+    end if
+    if (present(a33)) then
+      call fclSetKernelArg(kernel,i0+32,a33)
+      nArg = nArg + 1
+    end if
+    if (present(a34)) then
+      call fclSetKernelArg(kernel,i0+33,a34)
+      nArg = nArg + 1
+    end if
+    if (present(a35)) then
+      call fclSetKernelArg(kernel,i0+34,a35)
+      nArg = nArg + 1
+    end if
+    if (present(a36)) then
+      call fclSetKernelArg(kernel,i0+35,a36)
+      nArg = nArg + 1
+    end if
+    if (present(a37)) then
+      call fclSetKernelArg(kernel,i0+36,a37)
+      nArg = nArg + 1
+    end if
+    if (present(a38)) then
+      call fclSetKernelArg(kernel,i0+37,a38)
+      nArg = nArg + 1
+    end if
+    if (present(a39)) then
+      call fclSetKernelArg(kernel,i0+38,a39)
+      nArg = nArg + 1
+    end if
+    if (present(a40)) then
+      call fclSetKernelArg(kernel, i0+39, a40)
+      nArg = nArg + 1
+    end if
+    if (present(a41)) then
+      call fclSetKernelArg(kernel, i0+40, a41)
+      nArg = nArg + 1
+    end if
+    if (present(a42)) then
+      call fclSetKernelArg(kernel, i0+41, a42)
+      nArg = nArg + 1
+    end if
+    if (present(a43)) then
+      call fclSetKernelArg(kernel, i0+42, a43)
+      nArg = nArg + 1
+    end if
+    if (present(a44)) then
+      call fclSetKernelArg(kernel, i0+43, a44)
+      nArg = nArg + 1
+    end if
+    if (present(a45)) then
+      call fclSetKernelArg(kernel, i0+44, a45)
+      nArg = nArg + 1
+    end if
+    if (present(a46)) then
+      call fclSetKernelArg(kernel, i0+45, a46)
+      nArg = nArg + 1
+    end if
+    if (present(a47)) then
+      call fclSetKernelArg(kernel, i0+46, a47)
+      nArg = nArg + 1
+    end if
+    if (present(a48)) then
+      call fclSetKernelArg(kernel, i0+47, a48)
+      nArg = nArg + 1
+    end if
+    if (present(a49)) then
+      call fclSetKernelArg(kernel, i0+48, a49)
+      nArg = nArg + 1
+    end if
+    if (present(a50)) then
+      call fclSetKernelArg(kernel, i0+49, a50)
+      nArg = nArg + 1
+    end if
+    if (present(a51)) then
+      call fclSetKernelArg(kernel, i0+50, a51)
+      nArg = nArg + 1
+    end if
+    if (present(a52)) then
+      call fclSetKernelArg(kernel, i0+51, a52)
+      nArg = nArg + 1
+    end if
+    if (present(a53)) then
+      call fclSetKernelArg(kernel, i0+52, a53)
+      nArg = nArg + 1
+    end if
+    if (present(a54)) then
+      call fclSetKernelArg(kernel, i0+53, a54)
+      nArg = nArg + 1
+    end if
+    if (present(a55)) then
+      call fclSetKernelArg(kernel, i0+54, a55)
+      nArg = nArg + 1
+    end if
+    if (present(a56)) then
+      call fclSetKernelArg(kernel, i0+55, a56)
+      nArg = nArg + 1
+    end if
+    if (present(a57)) then
+      call fclSetKernelArg(kernel, i0+56, a57)
+      nArg = nArg + 1
+    end if
+    if (present(a58)) then
+      call fclSetKernelArg(kernel, i0+57, a58)
+      nArg = nArg + 1
+    end if
+    if (present(a59)) then
+      call fclSetKernelArg(kernel, i0+58, a59)
+      nArg = nArg + 1
+    end if
+    if (present(a60)) then
+      call fclSetKernelArg(kernel, i0+59, a60)
+      nArg = nArg + 1
+    end if
+    if (present(a61)) then
+      call fclSetKernelArg(kernel, i0+60, a61)
+      nArg = nArg + 1
+    end if
+    if (present(a62)) then
+      call fclSetKernelArg(kernel, i0+61, a62)
+      nArg = nArg + 1
+    end if
+    if (present(a63)) then
+      call fclSetKernelArg(kernel, i0+62, a63)
+      nArg = nArg + 1
+    end if
+    if (present(a64)) then
+      call fclSetKernelArg(kernel, i0+63, a64)
+      nArg = nArg + 1
+    end if
+    if (present(a65)) then
+      call fclSetKernelArg(kernel, i0+64, a65)
+      nArg = nArg + 1
+    end if
+    if (present(a66)) then
+      call fclSetKernelArg(kernel, i0+65, a66)
+      nArg = nArg + 1
+    end if
+    if (present(a67)) then
+      call fclSetKernelArg(kernel, i0+66, a67)
+      nArg = nArg + 1
+    end if
+    if (present(a68)) then
+      call fclSetKernelArg(kernel, i0+67, a68)
+      nArg = nArg + 1
+    end if
+    if (present(a69)) then
+      call fclSetKernelArg(kernel, i0+68, a69)
+      nArg = nArg + 1
+    end if
+    if (present(a70)) then
+      call fclSetKernelArg(kernel, i0+69, a70)
+      nArg = nArg + 1
+    end if
+    if (present(a71)) then
+      call fclSetKernelArg(kernel, i0+70, a71)
+      nArg = nArg + 1
+    end if
+    if (present(a72)) then
+      call fclSetKernelArg(kernel, i0+71, a72)
+      nArg = nArg + 1
+    end if
+    if (present(a73)) then
+      call fclSetKernelArg(kernel, i0+72, a73)
+      nArg = nArg + 1
+    end if
+    if (present(a74)) then
+      call fclSetKernelArg(kernel, i0+73, a74)
+      nArg = nArg + 1
+    end if
+    if (present(a75)) then
+      call fclSetKernelArg(kernel, i0+74, a75)
+      nArg = nArg + 1
+    end if
+    if (present(a76)) then
+      call fclSetKernelArg(kernel, i0+75, a76)
+      nArg = nArg + 1
+    end if
+    if (present(a77)) then
+      call fclSetKernelArg(kernel, i0+76, a77)
+      nArg = nArg + 1
+    end if
+    if (present(a78)) then
+      call fclSetKernelArg(kernel, i0+77, a78)
+      nArg = nArg + 1
+    end if
+    if (present(a79)) then
+      call fclSetKernelArg(kernel, i0+78, a79)
+      nArg = nArg + 1
+    end if
+    if (present(a80)) then
+      call fclSetKernelArg(kernel, i0+79, a80)
+      nArg = nArg + 1
+    end if
+    if (present(a81)) then
+      call fclSetKernelArg(kernel, i0+80, a81)
+      nArg = nArg + 1
+    end if
+    if (present(a82)) then
+      call fclSetKernelArg(kernel, i0+81, a82)
+      nArg = nArg + 1
+    end if
+    if (present(a83)) then
+      call fclSetKernelArg(kernel, i0+82, a83)
+      nArg = nArg + 1
+    end if
+    if (present(a84)) then
+      call fclSetKernelArg(kernel, i0+83, a84)
+      nArg = nArg + 1
+    end if
+    if (present(a85)) then
+      call fclSetKernelArg(kernel, i0+84, a85)
+      nArg = nArg + 1
+    end if
+    if (present(a86)) then
+      call fclSetKernelArg(kernel, i0+85, a86)
+      nArg = nArg + 1
+    end if
+    if (present(a87)) then
+      call fclSetKernelArg(kernel, i0+86, a87)
+      nArg = nArg + 1
+    end if
+    if (present(a88)) then
+      call fclSetKernelArg(kernel, i0+87, a88)
+      nArg = nArg + 1
+    end if
+    if (present(a89)) then
+      call fclSetKernelArg(kernel, i0+88, a89)
+      nArg = nArg + 1
+    end if
+    if (present(a90)) then
+      call fclSetKernelArg(kernel, i0+89, a90)
+      nArg = nArg + 1
+    end if
+    if (present(a91)) then
+      call fclSetKernelArg(kernel, i0+90, a91)
+      nArg = nArg + 1
+    end if
+    if (present(a92)) then
+      call fclSetKernelArg(kernel, i0+91, a92)
+      nArg = nArg + 1
+    end if
+    if (present(a93)) then
+      call fclSetKernelArg(kernel, i0+92, a93)
+      nArg = nArg + 1
+    end if
+    if (present(a94)) then
+      call fclSetKernelArg(kernel, i0+93, a94)
+      nArg = nArg + 1
+    end if
+    if (present(a95)) then
+      call fclSetKernelArg(kernel, i0+94, a95)
+      nArg = nArg + 1
+    end if
+    if (present(a96)) then
+      call fclSetKernelArg(kernel, i0+95, a96)
+      nArg = nArg + 1
+    end if
+    if (present(a97)) then
+      call fclSetKernelArg(kernel, i0+96, a97)
+      nArg = nArg + 1
+    end if
+    if (present(a98)) then
+      call fclSetKernelArg(kernel, i0+97, a98)
+      nArg = nArg + 1
+    end if
+    if (present(a99)) then
+      call fclSetKernelArg(kernel, i0+98, a99)
+      nArg = nArg + 1
+    end if
+    if (present(a100)) then
+      call fclSetKernelArg(kernel, i0+99, a100)
+      nArg = nArg + 1
+    end if
+    if (present(a101)) then
+      call fclSetKernelArg(kernel, i0+100, a101)
+      nArg = nArg + 1
+    end if
+    if (present(a102)) then
+      call fclSetKernelArg(kernel, i0+101, a102)
+      nArg = nArg + 1
+    end if
+    if (present(a103)) then
+      call fclSetKernelArg(kernel, i0+102, a103)
+      nArg = nArg + 1
+    end if
+    if (present(a104)) then
+      call fclSetKernelArg(kernel, i0+103, a104)
+      nArg = nArg + 1
+    end if
+    if (present(a105)) then
+      call fclSetKernelArg(kernel, i0+104, a105)
+      nArg = nArg + 1
+    end if
+    if (present(a106)) then
+      call fclSetKernelArg(kernel, i0+105, a106)
+      nArg = nArg + 1
+    end if
+    if (present(a107)) then
+      call fclSetKernelArg(kernel, i0+106, a107)
+      nArg = nArg + 1
+    end if
+    if (present(a108)) then
+      call fclSetKernelArg(kernel, i0+107, a108)
+      nArg = nArg + 1
+    end if
+    if (present(a109)) then
+      call fclSetKernelArg(kernel, i0+108, a109)
+      nArg = nArg + 1
+    end if
+    if (present(a110)) then
+      call fclSetKernelArg(kernel, i0+109, a110)
+      nArg = nArg + 1
+    end if
+    if (present(a111)) then
+      call fclSetKernelArg(kernel, i0+110, a111)
+      nArg = nArg + 1
+    end if
+    if (present(a112)) then
+      call fclSetKernelArg(kernel, i0+111, a112)
+      nArg = nArg + 1
+    end if
+    if (present(a113)) then
+      call fclSetKernelArg(kernel, i0+112, a113)
+      nArg = nArg + 1
+    end if
+    if (present(a114)) then
+      call fclSetKernelArg(kernel, i0+113, a114)
+      nArg = nArg + 1
+    end if
+    if (present(a115)) then
+      call fclSetKernelArg(kernel, i0+114, a115)
+      nArg = nArg + 1
+    end if
+    if (present(a116)) then
+      call fclSetKernelArg(kernel, i0+115, a116)
+      nArg = nArg + 1
+    end if
+    if (present(a117)) then
+      call fclSetKernelArg(kernel, i0+116, a117)
+      nArg = nArg + 1
+    end if
+    if (present(a118)) then
+      call fclSetKernelArg(kernel, i0+117, a118)
+      nArg = nArg + 1
+    end if
+    if (present(a119)) then
+      call fclSetKernelArg(kernel, i0+118, a119)
+      nArg = nArg + 1
+    end if
+    if (present(a120)) then
+      call fclSetKernelArg(kernel, i0+119, a120)
+      nArg = nArg + 1
+    end if
+    if (present(a121)) then
+      call fclSetKernelArg(kernel, i0+120, a121)
+      nArg = nArg + 1
+    end if
+    if (present(a122)) then
+      call fclSetKernelArg(kernel, i0+121, a122)
+      nArg = nArg + 1
+    end if
+    if (present(a123)) then
+      call fclSetKernelArg(kernel, i0+122, a123)
+      nArg = nArg + 1
+    end if
+    if (present(a124)) then
+      call fclSetKernelArg(kernel, i0+123, a124)
+      nArg = nArg + 1
+    end if
+    if (present(a125)) then
+      call fclSetKernelArg(kernel, i0+124, a125)
+      nArg = nArg + 1
+    end if
+    if (present(a126)) then
+      call fclSetKernelArg(kernel, i0+125, a126)
+      nArg = nArg + 1
+    end if
+    if (present(a127)) then
+      call fclSetKernelArg(kernel, i0+126, a127)
+      nArg = nArg + 1
+    end if
+    if (present(a128)) then
+      call fclSetKernelArg(kernel, i0+127, a128)
+      nArg = nArg + 1
+    end if
+    if (present(a129)) then
+      call fclSetKernelArg(kernel, i0+128, a129)
+      nArg = nArg + 1
+    end if
+   
 
     if (nArg > 0) then
       ! If any kernel arguments are specified, check that they are all present
@@ -834,14 +1324,36 @@ submodule (Focal) Focal_Setup
 
 
   module procedure fclSetKernelArgs !(kernel,a0,a1,a2,a3,a4,a5,a6,a7,a8,a9, &
-                                    ! a10,a11,a12,a13,a14,a15,a16,a17,a18,a19)
+                                    ! a10,a11,a12,a13,a14,a15,a16,a17,a18,a19, &
+                                    !  a20,a21,a22,a23,a24,a25,a26,a27,a28,a29, &
+                                    !  a30,a31,a32,a33,a34,a35,a36,a37,a38,a39, &
+                                    ! a40,a41,a42,a43,a44,a45,a46,a47,a48,a49, &
+                                    ! a50,a51,a52,a53,a54,a55,a56,a57,a58,a59, &
+                                    ! a60,a61,a62,a63,a64,a65,a66,a67,a68,a69, &
+                                    ! a70,a71,a72,a73,a74,a75,a76,a77,a78,a79, &
+                                    ! a80,a81,a82,a83,a84,a85,a86,a87,a88,a89, &
+                                    ! a90,a91,a92,a93,a94,a95,a96,a97,a98,a99, &
+                                    ! a100,a101,a102,a103,a104,a105,a106,a107,a108,a109, &
+                                    ! a110,a111,a112,a113,a114,a115,a116,a117,a118,a119, &
+                                    ! a120,a121,a122,a123,a124,a125,a126,a127,a128,a129)
     !! Set all kernel arguments at once without launching kernel.
 
     type(fclCommandQ), pointer :: cmdq
     integer :: nArg
 
     call fclProcessKernelArgs(kernel,cmdq,narg,a0,a1,a2,a3,a4,a5,a6,a7,a8,a9, &
-                               a10,a11,a12,a13,a14,a15,a16,a17,a18,a19)
+                               a10,a11,a12,a13,a14,a15,a16,a17,a18,a19, &
+                               a20,a21,a22,a23,a24,a25,a26,a27,a28,a29, &
+                               a30,a31,a32,a33,a34,a35,a36,a37,a38,a39, &
+                               a40,a41,a42,a43,a44,a45,a46,a47,a48,a49, &
+                               a50,a51,a52,a53,a54,a55,a56,a57,a58,a59, &
+                               a60,a61,a62,a63,a64,a65,a66,a67,a68,a69, &
+                               a70,a71,a72,a73,a74,a75,a76,a77,a78,a79, &
+                               a80,a81,a82,a83,a84,a85,a86,a87,a88,a89, &
+                               a90,a91,a92,a93,a94,a95,a96,a97,a98,a99, &
+                               a100,a101,a102,a103,a104,a105,a106,a107,a108,a109, &
+                               a110,a111,a112,a113,a114,a115,a116,a117,a118,a119, &
+                               a120,a121,a122,a123,a124,a125,a126,a127,a128,a129)
 
   end procedure fclSetKernelArgs
   ! ---------------------------------------------------------------------------
@@ -972,6 +1484,17 @@ submodule (Focal) Focal_Setup
   end procedure fclLocalDouble
   ! ---------------------------------------------------------------------------
 
+  module procedure fclReleaseKernel !(kernel)
+    !! Release OpenCL memory associated with underlying kernel pointer
+    integer :: errcode
+
+    if (kernel%cl_kernel /= -1) then
+      errcode = clReleaseKernel(kernel%cl_kernel)
+      call fclHandleError(errcode,'fclReleaseKernel','clReleaseKernel')
+    end if
+
+  end procedure fclReleaseKernel
+  ! ---------------------------------------------------------------------------
 
   module procedure fclBarrier_1 !(cmdq)
     !! Enqueue barrier on all events in command queue
